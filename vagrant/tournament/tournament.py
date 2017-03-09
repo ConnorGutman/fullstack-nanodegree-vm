@@ -30,7 +30,6 @@ def deletePlayers():
     db, c = connect()
     # Delete all rows in players and reset the sequence
     c.execute("TRUNCATE players CASCADE;")
-    c.execute("ALTER SEQUENCE players_user_id_seq RESTART WITH 1;")
     db.commit()
     db.close()
 
@@ -99,7 +98,7 @@ def playerStandings():
             # Get ID
             ID = number + 1
             # Get Name
-            name = names[number][1]
+            name = names[number][0]
             # Get wins
             query = "SELECT COUNT(*) FROM matches WHERE winner = %s"
             params = (str(number + 1))
@@ -121,8 +120,8 @@ def playerStandings():
     # If there are no matches build a standard list
     else:
         for number in xrange(0, totalPlayers):
-            ID = names[number][0]
-            name = names[number][1]
+            ID = number + 1
+            name = names[number][0]
             win_count = 0
             match_count = 0
             # wins and matches will be 0

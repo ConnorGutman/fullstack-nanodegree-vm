@@ -8,5 +8,5 @@
 DROP DATABASE IF EXISTS tournament;
 CREATE DATABASE tournament;
 \c tournament;
-CREATE TABLE players ( user_id serial PRIMARY KEY, name VARCHAR (50) NOT NULL);
-CREATE TABLE matches ( winner integer references players(user_id), loser integer references players(user_id));
+CREATE TABLE players (name VARCHAR (50) NOT NULL);
+CREATE TABLE matches ( winner integer, loser integer);
