@@ -19,8 +19,10 @@ def connect(database_name="tournament"):
 def deleteMatches():
     # Remove all the match records from the database.
     db, c = connect()
-    # Delete all rows in matches
+    # Delete all rows in matches and set matches+wins to 0 in players table
     c.execute("TRUNCATE matches;")
+    c.execute("UPDATE players SET wins = 0")
+    c.execute("UPDATE players SET matches = 0")
     db.commit()
     db.close()
 
@@ -58,9 +60,8 @@ def registerPlayer(name):
      """
 
     db, c = connect()
-    # Get the passed along name and add it to the players table
-    query = "INSERT INTO players (name) VALUES (%s)"
-    params = (name,)
+    query = "INSERT INTO players (name, wins, matches) VALUES (%s, %s, %s)"
+    params = (name, 0, 0)
     c.execute(query, params)
     db.commit()
     db.close()
@@ -81,12 +82,9 @@ def playerStandings():
     """
 
     db, c = connect()
-    # Get all of the names in the players table
     c.execute("SELECT * FROM players;")
     names = c.fetchall()
-    # Get the total number of players
     totalPlayers = countPlayers()
-    # Get the total number of matches
     c.execute("SELECT COUNT(*) FROM matches")
     totalMatches = c.fetchall()
     totalMatches = totalMatches[0][0]
@@ -94,44 +92,34 @@ def playerStandings():
     standings = []
     # Check if there's any recorded matches
     if totalMatches > 0:
-        # For total number of players
         for number in xrange(0, totalPlayers):
-            # Get ID
-            ID = number + 1
-            # Get Name
-            name = names[number][1]
-            # Get wins
-            query = "SELECT COUNT(*) FROM matches WHERE winner = %s"
-            params = (str(number + 1))
-            c.execute(query, params)
-            win_count = c.fetchall()
-            win_count = int(win_count[0][0])
-            # Get loses
-            query = "SELECT COUNT(*) FROM matches WHERE loser = %s"
-            params = (str(number + 1))
-            c.execute(query, params)
-            lose_count = c.fetchall()
-            lose_count = int(lose_count[0][0])
-            # Get number of matches
-            match_count = win_count + lose_count
-            # Create tuple
-            standing = (ID, name, win_count, match_count)
-            # Add player tuple to list
-            standings.append(standing)
-    # If there are no matches build a standard list
+                ID = number + 1
+                name = names[number][1]
+                query = "SELECT COUNT(*) FROM matches WHERE winner = %s"
+                params = (str(number + 1))
+                c.execute(query, params)
+                win_count = c.fetchall()
+                win_count = int(win_count[0][0])
+                query = "SELECT COUNT(*) FROM matches WHERE loser = %s"
+                params = (str(number + 1))
+                c.execute(query, params)
+                lose_count = c.fetchall()
+                lose_count = int(lose_count[0][0])
+                match_count = win_count + lose_count
+                standing = (ID, name, win_count, match_count)
+                # Add player tuple to list
+                standings.append(standing)
     else:
         for number in xrange(0, totalPlayers):
-            ID = names[number][0]
-            name = names[number][1]
-            win_count = 0
-            match_count = 0
-            # wins and matches will be 0
-            standing = (ID, name, win_count, match_count)
-            # Add player tuple to list
-            standings.append(standing)
+                ID = names[number][0]
+                name = names[number][1]
+                win_count = 0
+                match_count = 0
+                standing = (ID, name, win_count, match_count)
+                # Add player tuple to list
+                standings.append(standing)
     db.commit()
     db.close()
-    # Sort standings by wins
     standings.sort(key=lambda tup: tup[2])
     return standings
 
@@ -176,9 +164,9 @@ def swissPairings():
     pairs = []
     # Example: 8 players would have 4 pairs
     for number in xrange(0, totalPlayers, 2):
-        # Create tuple with ID1, Name1, ID2, Name2
-        pair = (allPlayers[number][0], allPlayers[number][1],
-                allPlayers[number + 1][0], allPlayers[number + 1][1])
-        # Add pair tuple to list
-        pairs.append(pair)
+            # Create tuple with ID1, Name1, ID2, Name2
+            pair = (allPlayers[number][0], allPlayers[number][1],
+                    allPlayers[number+1][0], allPlayers[number+1][1])
+            # Add pair tuple to list
+            pairs.append(pair)
     return pairs
